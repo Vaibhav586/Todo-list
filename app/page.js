@@ -1,101 +1,181 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from "react";
+
+// Hardcoded login credentials
+const validUser = { username: "user", password: "password" };
+
+const App = () => {
+  const [tasks, setTasks] = useState([]);
+  const [taskName, setTaskName] = useState("");  // Ensure empty string initialization
+  const [completedTasks, setCompletedTasks] = useState(0);
+  const [user, setUser] = useState(null);
+  const [dueDate, setDueDate] = useState("");    // Ensure empty string initialization
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [error, setError] = useState(null);     // Error state for invalid login
+
+  // Handle adding a new task
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (taskName !== "") {
+      const newTask = { name: taskName, isCompleted: false, dueDate };
+      setTasks([...tasks, newTask]);
+      setTaskName(""); // Reset taskName
+      setDueDate("");  // Reset dueDate
+    }
+  };
+
+  // Handle task completion
+  const toggleTaskCompletion = (index) => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index].isCompleted = !updatedTasks[index].isCompleted;
+    setTasks(updatedTasks);
+
+    // Update completed tasks count
+    const newCompletedCount = updatedTasks.filter(task => task.isCompleted).length;
+    setCompletedTasks(newCompletedCount);
+  };
+
+  // Calculate task progress percentage based on dates
+  const calculateProgress = () => {
+    if (tasks.length === 0) return 0;
+    return Math.round((completedTasks / tasks.length) * 100);
+  };
+
+  // Handle login
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const username = e.target.username.value;
+    const password = e.target.password.value;
+    if (username === validUser.username && password === validUser.password) {
+      localStorage.setItem("isLoggedIn", true); // Store login status in localStorage
+      setIsLoggedIn(true);
+      setError(null); // Clear any error if login is successful
+    } else {
+      setError("Invalid credentials. Please try again."); // Set error message
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+  };
+
+  // Check if the user is logged in
+  useEffect(() => {
+    const loggedInStatus = localStorage.getItem("isLoggedIn");
+    if (loggedInStatus) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <div className="flex h-screen bg-gray-900 text-white flex-col items-center justify-start p-6">
+      {/* If not logged in, show login page */}
+      {!isLoggedIn ? (
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <h1 className="text-2xl font-bold mb-6">Login</h1>
+          {/* Show error message if login fails */}
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          <form onSubmit={handleLogin} className="mb-6 flex flex-col space-y-4">
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              className="p-2 rounded w-60 text-black"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              className="p-2 rounded w-60 text-black"
+            />
+            <button
+              type="submit"
+              className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-400"
+            >
+              Login
+            </button>
+          </form>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ) : (
+        <div className="w-full">
+          {/* Header */}
+          <h1 className="text-2xl font-bold mb-6">Task Manager</h1>
+
+          {/* Add Task Form */}
+          <form onSubmit={handleAddTask} className="mb-6 flex space-x-4">
+            <input
+              type="text"
+              className="border-2 border-gray-400 p-2 rounded w-60 text-black"
+              placeholder="Enter your task"
+              value={taskName} // Controlled input
+              onChange={(e) => setTaskName(e.target.value)}
+            />
+            <input
+              type="date"
+              className="border-2 border-gray-400 p-2 rounded w-60 text-black"
+              value={dueDate} // Controlled input
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-400"
+            >
+              Add Task
+            </button>
+          </form>
+
+          {/* Task Progress Meter */}
+          <div className="w-60 mb-6">
+            <h2 className="font-bold text-lg">Progress</h2>
+            <div className="h-2 bg-gray-600 rounded-full">
+              <div
+                className="h-2 bg-green-500 rounded-full"
+                style={{ width: `${calculateProgress()}%` }}
+              ></div>
+            </div>
+            <p className="text-center text-sm mt-2">{calculateProgress()}% Completed</p>
+          </div>
+
+          {/* Task List */}
+          <div className="w-60">
+            {tasks.length === 0 ? (
+              <p className="text-center text-gray-400">No tasks added</p>
+            ) : (
+              <ul className="space-y-2">
+                {tasks.map((task, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between bg-gray-700 p-2 rounded-lg"
+                  >
+                    <span className={task.isCompleted ? "line-through text-gray-400" : ""}>
+                      {task.name} (Due: {task.dueDate})
+                    </span>
+                    <button
+                      onClick={() => toggleTaskCompletion(index)}
+                      className={`py-1 px-3 rounded ${task.isCompleted ? 'bg-red-500' : 'bg-green-500'} text-white`}
+                    >
+                      {task.isCompleted ? 'Undo' : 'Complete'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="mt-6 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-400"
+          >
+            Logout
+          </button>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default App;
